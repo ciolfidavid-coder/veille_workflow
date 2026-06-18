@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 from urllib.parse import urljoin
-
+import time
 import requests
 from bs4 import BeautifulSoup
 
@@ -16,6 +16,32 @@ HEADERS = {
 }
 
 
+
+def extraire_communiques():
+    resultats = []
+    vus = set()
+    page = 0
+
+    while True:
+        resp = requests.get(f"{URL}&page={page}", headers=HEADERS, timeout=30)
+        if resp.status_code == 429:
+            time.sleep(5)
+            continue
+        resp.raise_for_status()
+        batch = _parser_page(resp.text)
+        if not batch:
+            break
+
+        for item in batch:
+            if item[2] not in vus:
+                vus.add(item[2])
+                resultats.append(item)
+
+        page += 1
+        time.sleep(1)  # délai entre chaque page
+
+    return resultats
+    
 def demander_date(message):
     while True:
         date_str = input(message)
