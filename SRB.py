@@ -27,10 +27,7 @@ def extraire_communiques():
         if resp.status_code == 429:
             time.sleep(5)
             continue
-        if resp.status_code == 429:
-            break  # arrête la pagination proprement
-        if resp.status_code != 200:
-            break
+
         batch = _parser_page(resp.text)
         if not batch:
             break
@@ -89,7 +86,8 @@ def extraire_communiques():
 
     while True:
         resp = requests.get(f"{URL}&page={page}", headers=HEADERS, timeout=30)
-        resp.raise_for_status()
+        if resp.status_code == 429 or resp.status_code != 200:
+            break
         batch = _parser_page(resp.text)
         if not batch:
             break
@@ -100,6 +98,7 @@ def extraire_communiques():
                 resultats.append(item)
 
         page += 1
+        time.sleep(1)
 
     return resultats
 
